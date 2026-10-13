@@ -5,8 +5,16 @@
 #include <stdexcept>
 #include <optional>
 #include <utility>
+#include <memory>
 
 class RequestLimiter {
+private:
+    struct State {
+        int max_requests_;
+        int active_requests_ = 0;
+        std::mutex mutex_;
+    };  // State
+    
 public:
     class Permit {
     public:
@@ -14,75 +22,78 @@ public:
         
         Permit& operator=(const Permit&) = delete;
 
-        Permit(Permit&& other) noexcept : limiter_(std::exchange(other.limiter_, nullptr)) {}
+        Permit(Permit&& other) noexcept : state_(std::exchange(other.state_, nullptr)) {}
         
         Permit& operator=(Permit&& other) noexcept {
             if (this != &other) {
-                if (limiter_) {
-                    limiter_->Release();
+                if (state_) {
+                    Release();
                 }
-                limiter_ = std::exchange(other.limiter_, nullptr);
+                state_ = std::exchange(other.state_, nullptr);
                 // or
-                // limiter_ = other.limiter_;
-                // other.limiter_ = nullptr;
+                // state_ = other.state_;
+                // other.state_ = nullptr;
             }
 
             return *this;
         }
 
-        ~Permit() {
-            if (limiter_) {
-                limiter_->Release();
+        ~Permit() noexcept {
+            if (state_){
+                Release();
             }
         }
 
     private:
         friend class RequestLimiter;
 
-        explicit Permit(RequestLimiter* limiter) : limiter_(limiter) {}
+        explicit Permit(const std::shared_ptr<State>& state) : state_(state) {}
 
-        RequestLimiter* limiter_;
-    };
+        std::shared_ptr<State> state_;
 
-    explicit RequestLimiter(int max_requests) : max_requests_(max_requests) {
-        if (max_requests <= 0) {
+        void Release() noexcept {
+            std::lock_guard lock(state_->mutex_);
+
+            if (state_->active_requests_ == 0) {
+                std::terminate();
+            }
+
+            state_->active_requests_--;
+        }
+    };  // Permit
+
+    RequestLimiter(const RequestLimiter&) = delete;
+    RequestLimiter& operator=(const RequestLimiter&) = delete;
+
+    explicit RequestLimiter(int max_requests) {
+        state_ = std::make_shared<State>();
+        state_->max_requests_ = max_requests;
+
+        if (state_->max_requests_ <= 0) {
             throw std::logic_error("Max requests argument can't be less or equal to zero.");
         }
     }
 
     std::optional<Permit> TryAcquire() {
-        std::lock_guard lock(mutex_);
+        std::lock_guard lock(state_->mutex_);
 
-        if (active_requests_ >= max_requests_) {
+        if (state_->active_requests_ >= state_->max_requests_) {
             return std::nullopt;
         }
 
-        ++active_requests_;
+        state_->active_requests_++;
 
-        return Permit(this);
+        return Permit(state_);
     }
 
     int GetActiveCount() const {
-        std::lock_guard lock(mutex_);
-        return active_requests_;
+        std::lock_guard lock(state_->mutex_);
+        return state_->active_requests_;
     }
 
 private:
-    void Release() noexcept {
-        std::lock_guard lock(mutex_);
-
-        if (active_requests_ == 0) {
-            std::terminate();
-        }
-
-        --active_requests_;
-    }
-
-    int max_requests_;
-    int active_requests_ = 0;
-
-    mutable std::mutex mutex_;
-};
+    std::shared_ptr<State> state_;
+};  // RequestLimiter
 
 void ProcessRequest(RequestLimiter& limiter) {
     auto permit = limiter.TryAcquire();
