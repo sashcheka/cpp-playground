@@ -27,6 +27,7 @@ CMakeUserPresets.json
 
 # Editors
 .vscode/
+/cpp-playground.code-workspace
 .idea/
 .vs/
 *.swp
