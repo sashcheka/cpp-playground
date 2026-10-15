@@ -1,43 +1,48 @@
-# Практика C++
+# C++ Practice
 
-Цель — подготовка к C++ backend-интервью через чтение, написание и ревью кода.
+Goal: prepare for C++ backend interviews by reading, writing, and reviewing code.
 
-## Формат ближайших упражнений
+## Format for Upcoming Exercises
 
-- C++20, стандартная библиотека, один поток.
-- Один `main.cpp` в `before/` и один в `after/`; при подготовке файлы идентичны.
-- Ориентир: 70–130 строк начального кода и 30–60 минут работы. Объём подстраивается под прогресс, а не становится самоцелью.
-- Каждое упражнение требует реализации нескольких методов или законченной возможности, а также исправления ошибок. Задачи на одну замену ключевого слова больше не являются основным форматом.
-- Одна новая тема за раз; уже изученные темы постепенно объединяются.
-- Начальная версия компилируется. Можно использовать простые заглушки для явно заданной новой функциональности, но готового решения в ней нет.
-- В условии указаны назначение API, ожидаемое поведение, правила владения и ограничения. Места ошибок и способы исправления не раскрываются.
-- Пользователь дописывает небольшие проверки в `main`: обычный сценарий и несколько граничных случаев. Внешний тестовый фреймворк не нужен.
-- Имена и сигнатуры API можно менять, если условие не требует обратного и сохраняется заданное поведение.
+- C++20, standard library only, one thread.
+- One `main.cpp` in `before/` and one in `after/`; both files start out identical.
+- Aim for 70–130 lines of starter code and 30–60 minutes of work. Adjust the scope to learning progress; line count is only a guide.
+- Each exercise requires implementing several methods or a complete feature, as well as fixing bugs. Exercises that only require changing a keyword are no longer the main format.
+- Introduce one new topic at a time, gradually combining topics already covered.
+- Give each exercise a concrete backend context and a short introduction to one domain concept. Connect the C++ work to observable behavior, such as assembling messages, scheduling retries, or retaining cached data.
+- State the simplified domain model and its limits explicitly. Start with deterministic simulations; real sockets, multiple processes, and threads are introduced separately when appropriate.
+- Include an English task description with the contract, expected examples, work to implement, and checks to add. Separate explicitly unfinished functionality from hidden review problems without revealing those problems.
+- The starter code compiles. Simple stubs are allowed for explicitly requested functionality, but no completed solution is provided.
+- The task describes the API's purpose, expected behavior, ownership rules, and constraints. Bug locations and fixes are not revealed.
+- The learner adds small checks in `main`: a normal scenario and several edge cases. No external test framework is needed.
+- API names and signatures may change unless the task says otherwise, provided the required behavior is preserved.
 
-## Работа над упражнением
+## Exercise Workflow
 
-1. Прочитать код и своими словами описать поведение и время жизни объектов.
-2. Составить короткий план изменений.
-3. Реализовать заданную функциональность и исправления только в `after/`.
-4. Дописать проверки и запустить их; при работе с памятью использовать санитайзеры.
-5. Сравнить `before/` и `after/`, объяснить решения и их ограничения.
-6. Получить ревью. При оставшихся ошибках сначала сообщать наблюдаемую проблему и вопросы для самостоятельного поиска. Готовый код давать только по прямому запросу.
+1. Read the code and describe its behavior and object lifetimes in your own words.
+2. Make a short plan for the changes.
+3. Implement the required functionality and fixes only in `after/`.
+4. Add and run checks; use sanitizers when working with memory.
+5. Compare `before/` and `after/`, and explain your decisions and their limitations.
+6. Get a review. If bugs remain, first report the observed problem and ask questions that support independent investigation. Provide solution code only when explicitly requested.
 
-`before/` и решения предыдущих упражнений не переписываются. Новое упражнение всегда создаётся в новой папке. Подсказки и TODO-комментарии, раскрывающие скрытые ошибки, в исходники не добавляются.
+Preserve `before/` and solutions to previous exercises. Always create a new folder for a new exercise. Do not add hints or TODO comments that reveal hidden bugs to the source code.
 
-## Последовательность
+## Learning Sequence
 
-| Этап | Тема | Практическая работа |
-| --- | --- | --- |
-| Пройдено: `notification_sender` | Основы наследования и полиморфизма | Вызов нужного поведения через общий интерфейс. |
-| Пройдено: `job_runner` | Владение, RAII, перемещение, исключения | Передача заданий между владельцами и автоматическое освобождение ресурсов. |
-| Далее: `byte_buffer` | Семантика значения и владение ресурсом | Дописать операции буфера, независимое копирование и передачу ресурса; проверить пустое состояние и границы. Объяснить назначение специальных методов класса. |
-| `document_exporter` | Интерфейсы и наследование | Реализовать новый экспортёр и обработку набора документов через общий интерфейс; проверить разные реализации и ошибки входных данных. |
-| `message_store` | STL, итераторы, ссылки, время жизни | Дописать поиск, удаление и получение упорядоченной выборки; определить поведение результатов после изменения хранилища. |
-| `config_parser` | Строки, разбор данных, ошибки | Дописать разбор конфигурации и валидацию, определить обработку повторов, пустых значений и некорректного ввода. |
-| `request_pipeline` | Композиция изученных тем | Реализовать несколько шагов обработки запроса, порядок выполнения и передачу ошибок; обеспечить понятное владение объектами. |
-| Затем: `response_cache` | Контейнеры, инварианты, LRU | Вернуться к отложенному многофайловому упражнению после закрепления основ. |
+| Stage | C++ Focus | Domain Concept | Practical Work |
+| --- | --- | --- | --- |
+| Completed: `notification_sender` | Inheritance and polymorphism basics | Notification channels | Invoke the appropriate behavior through a common interface. |
+| Completed: `job_runner` | Ownership, RAII, moves, exceptions | Task execution | Transfer jobs between owners and release resources automatically. |
+| Current: `byte_buffer` | Value semantics and resource ownership | Byte streams and application message boundaries | Implement buffer operations, independent copying, resource transfer, and line extraction from simulated incoming chunks. |
+| `document_exporter` | Interfaces and inheritance | Document formats and batch export | Implement a new exporter and process records through a common interface; define format behavior and handle invalid input. |
+| `message_store` | STL, iterators, references, lifetimes | In-memory message storage and queries | Implement lookup, removal, and sorted queries; define how results behave after the store changes. |
+| `config_parser` | Strings, parsing, errors | Server configuration and validation | Implement parsing and validation with explicit policies for duplicates, empty values, and invalid input. |
+| `retry_queue` | Containers, ordering, `std::chrono`, value types | Delayed work and retry scheduling | Implement scheduling, selecting ready work, and bounded retries using a caller-controlled clock. No sleeping or worker threads. |
+| `request_pipeline` | Combining previously covered topics | Request routing and validation | Implement processing steps, execution order, and error propagation; establish clear object ownership. |
+| Later: `response_cache` | Containers, invariants, LRU | Bounded caching and eviction | Return to the postponed multi-file exercise after consolidating the fundamentals. |
+| `request_deduplicator` | Maps, state transitions, lifetimes | Duplicate delivery and idempotency | Simulate repeated request IDs, cached outcomes, and bounded retention under a precise local model. This introduces a distributed-systems concern without claiming to implement a real distributed system. |
 
-Последовательность можно менять по результатам ревью. Если тема ещё не усвоена, следующее упражнение закрепляет её через другую задачу, а не добавляет сразу несколько новых концепций.
+Adjust the sequence based on review results. If a topic needs more practice, reinforce it through a different task before introducing several new concepts.
 
-Многопоточность добавляется отдельным этапом позже, по запросу. К многофайловым проектам возвращаемся после уверенной работы с небольшими однопоточными программами.
+Introduce multithreading as a separate stage later, when requested. Return to multi-file projects after becoming comfortable with small single-threaded programs.
