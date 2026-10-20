@@ -39,10 +39,14 @@ public:
             return;
         }
 
-        char* replacement = new char[requested_capacity];
+        char* temp = new char[requested_capacity];
+        for (std::size_t i = 0; i < size_; ++i) {
+            temp[i] = data_[i];
+        }
 
         delete[] data_;
-        data_ = replacement;
+        data_ = temp;
+
         capacity_ = requested_capacity;
     }
 
@@ -73,7 +77,29 @@ public:
     }
 
     std::optional<std::string> TryReadLine() {
-        throw std::logic_error("Operation not implemented");
+        if (size_ <= 0) {
+            return std::nullopt;
+        }
+
+        std::string line;
+
+        int newlineIdx = -1;
+        for (std::size_t i = 0; i < size_; i++) {
+            if (data_[i] == '\n') {
+                newlineIdx = i;
+                break;
+            } else {
+                line += data_[i];
+            }
+        }
+
+        if (newlineIdx == -1) {
+            return std::nullopt;
+        }
+
+        Consume(newlineIdx + 1);
+
+        return line;
     }
 
     void Clear() {
@@ -101,10 +127,19 @@ private:
 int main() {
     try {
         ByteBuffer input(16);
-        input.Append("v1:HELLO");
-        input.Consume(3);
+        input.Append("HEL");
 
-        std::cout << "Message: "
+        if (!input.TryReadLine()) {
+            std::cout << "Waiting for message\n";
+        }
+
+        input.Append("LO\nTAIL");
+
+        if (auto message = input.TryReadLine()) {
+            std::cout << "Message: " << *message << '\n';
+        }
+
+        std::cout << "Remaining: "
                   << std::string(input.Data(), input.Size()) << '\n';
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
