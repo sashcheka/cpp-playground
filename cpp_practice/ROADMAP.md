@@ -11,7 +11,7 @@ Goal: prepare for C++ backend interviews by reading, writing, and reviewing code
 - Introduce one new topic at a time, gradually combining topics already covered.
 - Give each exercise a concrete backend context and a short introduction to one domain concept. Connect the C++ work to observable behavior, such as assembling messages, scheduling retries, or retaining cached data.
 - State the simplified domain model and its limits explicitly. Start with deterministic simulations; real sockets, multiple processes, and threads are introduced separately when appropriate.
-- Include an English task description with the contract, expected examples, work to implement, and checks to add. Separate explicitly unfinished functionality from hidden review problems without revealing those problems.
+- Keep exercise READMEs short and in English: task, essential behavior, a brief check list, and build/run commands. Include examples only when needed to define a format. Separate explicitly unfinished functionality from hidden review problems without revealing those problems.
 - The starter code compiles. Simple stubs are allowed for explicitly requested functionality, but no completed solution is provided.
 - The task describes the API's purpose, expected behavior, ownership rules, and constraints. Bug locations and fixes are not revealed.
 - The learner adds small checks in `main`: a normal scenario and several edge cases. No external test framework is needed.
