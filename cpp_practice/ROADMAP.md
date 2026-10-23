@@ -34,8 +34,8 @@ Preserve `before/` and solutions to previous exercises. Always create a new fold
 | --- | --- | --- | --- |
 | Completed: `notification_sender` | Inheritance and polymorphism basics | Notification channels | Invoke the appropriate behavior through a common interface. |
 | Completed: `job_runner` | Ownership, RAII, moves, exceptions | Task execution | Transfer jobs between owners and release resources automatically. |
-| Current: `byte_buffer` | Value semantics and resource ownership | Byte streams and application message boundaries | Implement buffer operations, independent copying, resource transfer, and line extraction from simulated incoming chunks. |
-| `document_exporter` | Interfaces and inheritance | Document formats and batch export | Implement a new exporter and process records through a common interface; define format behavior and handle invalid input. |
+| Completed: `byte_buffer` | Value semantics and resource ownership | Byte streams and application message boundaries | Implement buffer operations, independent copying, resource transfer, and line extraction from simulated incoming chunks. |
+| Current: `document_exporter` | Interfaces and inheritance | Document formats and batch export | Implement a new exporter and process records through a common interface; define format behavior and handle invalid input. |
 | `message_store` | STL, iterators, references, lifetimes | In-memory message storage and queries | Implement lookup, removal, and sorted queries; define how results behave after the store changes. |
 | `config_parser` | Strings, parsing, errors | Server configuration and validation | Implement parsing and validation with explicit policies for duplicates, empty values, and invalid input. |
 | `retry_queue` | Containers, ordering, `std::chrono`, value types | Delayed work and retry scheduling | Implement scheduling, selecting ready work, and bounded retries using a caller-controlled clock. No sleeping or worker threads. |
