@@ -5,7 +5,7 @@ Goal: prepare for C++ backend interviews by reading, writing, and reviewing code
 ## Format for Upcoming Exercises
 
 - C++20, standard library only, one thread.
-- One `main.cpp` in `before/` and one in `after/`; both files start out identical.
+- Each exercise has `before/` and `after/` with identical initial code. Starting with `message_store`, use independent CMake projects with `include/`, `src/`, and a short `main.cpp`.
 - Aim for 70–130 lines of starter code and 30–60 minutes of work. Adjust the scope to learning progress; line count is only a guide.
 - Each exercise requires implementing several methods or a complete feature, as well as fixing bugs. Exercises that only require changing a keyword are no longer the main format.
 - Introduce one new topic at a time, gradually combining topics already covered.
@@ -35,8 +35,8 @@ Preserve `before/` and solutions to previous exercises. Always create a new fold
 | Completed: `notification_sender` | Inheritance and polymorphism basics | Notification channels | Invoke the appropriate behavior through a common interface. |
 | Completed: `job_runner` | Ownership, RAII, moves, exceptions | Task execution | Transfer jobs between owners and release resources automatically. |
 | Completed: `byte_buffer` | Value semantics and resource ownership | Byte streams and application message boundaries | Implement buffer operations, independent copying, resource transfer, and line extraction from simulated incoming chunks. |
-| Current: `document_exporter` | Interfaces and inheritance | Document formats and batch export | Implement a new exporter and process records through a common interface; define format behavior and handle invalid input. |
-| `message_store` | STL, iterators, references, lifetimes | In-memory message storage and queries | Implement lookup, removal, and sorted queries; define how results behave after the store changes. |
+| Completed: `document_exporter` | Interfaces and inheritance | Document formats and batch export | Implement a new exporter and process records through a common interface; define format behavior and handle invalid input. |
+| Current: `message_store` | STL, iterators, value copies, multi-file projects | In-memory message storage and queries | Implement acknowledgement, cleanup, and sorted queries; define snapshot lifetime and enforce bounded capacity. |
 | `config_parser` | Strings, parsing, errors | Server configuration and validation | Implement parsing and validation with explicit policies for duplicates, empty values, and invalid input. |
 | `retry_queue` | Containers, ordering, `std::chrono`, value types | Delayed work and retry scheduling | Implement scheduling, selecting ready work, and bounded retries using a caller-controlled clock. No sleeping or worker threads. |
 | `request_pipeline` | Combining previously covered topics | Request routing and validation | Implement processing steps, execution order, and error propagation; establish clear object ownership. |
@@ -45,4 +45,4 @@ Preserve `before/` and solutions to previous exercises. Always create a new fold
 
 Adjust the sequence based on review results. If a topic needs more practice, reinforce it through a different task before introducing several new concepts.
 
-Introduce multithreading as a separate stage later, when requested. Return to multi-file projects after becoming comfortable with small single-threaded programs.
+Introduce multithreading as a separate stage later, when requested. Keep multi-file projects small, with clear header/source separation and minimal CMake.
