@@ -26,6 +26,57 @@ public:
         capacity_ = initial_capacity;
     }
 
+    ByteBuffer(const ByteBuffer& other) : size_(other.size_), capacity_(other.capacity_) {
+        data_ = new char[capacity_];
+
+        for (std::size_t i = 0; i < size_; ++i) {
+            data_[i] = other.data_[i];
+        }
+    }
+
+    ByteBuffer& operator=(const ByteBuffer& other) {
+        if (this == &other) {
+            return *this;
+        }
+
+        char* temp = new char[other.capacity_];
+
+        size_ = other.size_;
+        capacity_ = other.capacity_;
+        for (std::size_t i = 0; i < size_; ++i) {
+            temp[i] = other.data_[i];
+        }
+
+        delete[] data_;
+        data_ = temp;
+
+        return *this;
+    }
+
+    ByteBuffer(ByteBuffer&& other) noexcept
+        : data_(other.data_), size_(other.size_), capacity_(other.capacity_) {
+        other.data_ = nullptr;
+        other.size_ = 0;
+        other.capacity_ = 0;
+    }
+
+    ByteBuffer& operator=(ByteBuffer&& other) noexcept {
+        if (this == &other) {
+            return *this;
+        }
+
+        delete[] data_;
+        data_ = other.data_;
+        size_ = other.size_;
+        capacity_ = other.capacity_;
+
+        other.data_ = nullptr;
+        other.size_ = 0;
+        other.capacity_ = 0;
+
+        return *this;
+    }
+
     ~ByteBuffer() {
         delete[] data_;
     }
@@ -84,7 +135,7 @@ public:
         std::string line;
 
         int newlineIdx = -1;
-        for (std::size_t i = 0; i < size_; i++) {
+        for (std::size_t i = 0; i < size_; ++i) {
             if (data_[i] == '\n') {
                 newlineIdx = i;
                 break;
@@ -127,20 +178,15 @@ private:
 int main() {
     try {
         ByteBuffer input(16);
-        input.Append("HEL");
+        input.Append("HELLO");
 
-        if (!input.TryReadLine()) {
-            std::cout << "Waiting for message\n";
-        }
+        ByteBuffer message;
+        message = std::move(input);
 
-        input.Append("LO\nTAIL");
+        input.Append("WORLD");
 
-        if (auto message = input.TryReadLine()) {
-            std::cout << "Message: " << *message << '\n';
-        }
-
-        std::cout << "Remaining: "
-                  << std::string(input.Data(), input.Size()) << '\n';
+        std::cout << std::string(message.Data(), message.Size()) << '\n';
+        std::cout << std::string(input.Data(), input.Size()) << '\n';
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;
