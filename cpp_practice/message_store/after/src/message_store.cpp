@@ -17,7 +17,7 @@ bool MessageStore::Add(Message message) {
         throw std::invalid_argument("Invalid message");
     }
 
-    if (entries_.size() > capacity_) {
+    if (entries_.size() >= capacity_) {
         return false;
     }
 
@@ -52,16 +52,45 @@ bool MessageStore::Erase(MessageId id) {
     return false;
 }
 
-bool MessageStore::Acknowledge(MessageId) {
+bool MessageStore::Acknowledge(MessageId id) {
+    for (auto it = entries_.begin(); it != entries_.end(); ++it) {
+        if (it->message.id == id) {
+            it->acknowledged = true;
+            return true;
+        }
+    }
+
     return false;
 }
 
 std::size_t MessageStore::RemoveAcknowledged() {
-    return 0;
+    std::size_t sizeBefore = entries_.size();
+
+    std::erase_if(entries_, [](const Entry& entry) {
+        return entry.acknowledged;
+    });
+
+    return sizeBefore - entries_.size();
 }
 
-std::vector<Message> MessageStore::Pending(std::string_view) const {
-    return {};
+std::vector<Message> MessageStore::Pending(std::string_view topic) const {
+    std::vector<Message> notAcknowledgedEntries;
+
+    for (const auto& entry : entries_) {
+        if (!entry.acknowledged && entry.message.topic == topic) {
+            notAcknowledgedEntries.push_back(entry.message);
+        }
+    }
+
+    std::ranges::sort(notAcknowledgedEntries, [](const Message& a, const Message& b) {
+        if (a.priority != b.priority) {
+            return a.priority > b.priority;
+        }
+        
+        return a.id < b.id;
+    });
+
+    return notAcknowledgedEntries;
 }
 
 std::size_t MessageStore::Size() const {
