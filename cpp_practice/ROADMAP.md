@@ -39,8 +39,8 @@ Preserve `before/` and solutions to previous exercises. Always create a new fold
 | Completed: `message_store` | STL, iterators, value copies, multi-file projects | In-memory message storage and queries | Implement acknowledgement, cleanup, and sorted queries; define snapshot lifetime and enforce bounded capacity. |
 | Completed: `config_parser` | Strings, parsing, errors | Server configuration and validation | Implement parsing and validation with explicit policies for duplicates, empty values, and invalid input. |
 | Current: `retry_queue` | Containers, ordering, `std::chrono`, value types | Delayed work and retry scheduling | Implement scheduling, selecting ready work, and bounded retries using a caller-controlled clock. No sleeping or worker threads. |
+| Next: `response_cache` | Containers, iterators, invariants, LRU | Bounded caching and eviction | Review indexed LRU behavior; implement non-mutating lookup, clearing, and capacity changes. |
 | `request_pipeline` | Combining previously covered topics | Request routing and validation | Implement processing steps, execution order, and error propagation; establish clear object ownership. |
-| Later: `response_cache` | Containers, invariants, LRU | Bounded caching and eviction | Return to the postponed multi-file exercise after consolidating the fundamentals. |
 | `request_deduplicator` | Maps, state transitions, lifetimes | Duplicate delivery and idempotency | Simulate repeated request IDs, cached outcomes, and bounded retention under a precise local model. This introduces a distributed-systems concern without claiming to implement a real distributed system. |
 
 Adjust the sequence based on review results. If a topic needs more practice, reinforce it through a different task before introducing several new concepts.
