@@ -28,32 +28,34 @@ int Config::GetInt(std::string_view key, int fallback) const {
         return fallback;
     }
 
-    std::string stringValue = it->second;
-    long long value = 0ll;
-    bool hasDigit = false;
-    int sign = 0;
+    std::string_view stringValue = it->second;
+    if (stringValue.size() == 0) {
+        throw std::invalid_argument("Value can't be represented as integer");
+    }
 
-    for (char ch : stringValue) {
+    long long value = 0ll;
+
+    int sign = (stringValue[0] == '-') ? -1 : 1;
+    std::size_t i = (stringValue[0] == '-' || stringValue[0] == '+') ? 1 : 0;
+
+    if (i == stringValue.size()) {
+        throw std::invalid_argument("Value can't be represented as integer");
+    }
+
+    while (i < stringValue.size()) {
+        char ch = stringValue[i];
+
         if (std::isdigit(static_cast<unsigned char>(ch))) {
             value = value * 10 + (ch - '0');
-            hasDigit = true;
-        } else if (!hasDigit && sign == 0 && (ch == '-' || ch == '+')) {
-            sign = (ch == '+') ? 1 : -1;
         } else {
             throw std::invalid_argument("Value can't be represented as integer");
         }
 
-        if ((!sign ? 1 : sign) * value < INT_MIN || INT_MAX < (!sign ? 1 : sign) * value) {
+        if (!(INT_MIN <= sign * value && sign * value <= INT_MAX)) {
             throw std::invalid_argument("Value can't be represented as integer");
         }
-    }
 
-    if (!hasDigit) {
-        throw std::invalid_argument("Value can't be represented as integer");
-    }
-
-    if (!sign) {
-        sign = 1;
+        ++i;
     }
 
     return static_cast<int>(sign * value);
