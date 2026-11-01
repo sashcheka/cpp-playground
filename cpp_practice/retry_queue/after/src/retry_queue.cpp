@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <utility>
+#include <algorithm>
 
 RetryQueue::RetryQueue(
     std::size_t max_attempts,
@@ -19,7 +20,7 @@ bool RetryQueue::Schedule(TaskId id, std::string payload, TimePoint due) {
     }
 
     for (const auto& task : tasks_) {
-        if (task.id == id && task.due == due) {
+        if (task.id == id) {
             return false;
         }
     }
@@ -28,16 +29,62 @@ bool RetryQueue::Schedule(TaskId id, std::string payload, TimePoint due) {
     return true;
 }
 
-std::optional<RetryTask> RetryQueue::TakeReady(TimePoint) {
-    return std::nullopt;
+std::optional<RetryTask> RetryQueue::TakeReady(TimePoint now) {
+    std::vector<RetryTask>::iterator taskIter = tasks_.end();
+
+    for (auto it = tasks_.begin(); it != tasks_.end(); ++it) {
+        if (it->due <= now) {
+            if (taskIter == tasks_.end() || 
+                it->due < taskIter->due || 
+                (it->due == taskIter->due && it->id < taskIter->id)) {
+                taskIter = it;
+            }
+        }
+    }
+
+    if (taskIter == tasks_.end()) {
+        return std::nullopt;
+    }
+    
+    RetryTask res = std::move(*taskIter);
+    tasks_.erase(taskIter);
+    return res;
 }
 
-bool RetryQueue::Retry(RetryTask, TimePoint) {
-    return false;
+bool RetryQueue::Retry(RetryTask task, TimePoint now) {
+    if (task.attempt >= max_attempts_) {
+        return false;
+    }
+
+    for (auto it = tasks_.begin(); it != tasks_.end(); ++it) {
+        if (it->id == task.id) {
+            return false;
+        }
+    }
+
+    ++task.attempt;
+    task.due = now + retry_delay_;
+    tasks_.push_back(std::move(task));
+
+    return true;
 }
 
 std::optional<TimePoint> RetryQueue::NextDue() const {
-    return std::nullopt;
+    TimePoint minDue = TimePoint::max();
+    bool found = false;
+
+    for (auto it = tasks_.begin(); it != tasks_.end(); ++it) {
+        if (it->due <= minDue) {
+            minDue = it->due;
+            found = true;
+        }
+    }
+
+    if (!found) {
+        return std::nullopt;
+    }
+
+    return minDue;
 }
 
 bool RetryQueue::Cancel(TaskId id) {
