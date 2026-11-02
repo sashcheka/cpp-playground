@@ -6,6 +6,7 @@ Goal: design and review practical C++ backend, systems, and ML infrastructure so
 
 - Use C++20 for repository exercises and explain design in terms of modern C++17/20. Start with the standard library and one thread; scope concurrency separately when appropriate.
 - Each exercise has `before/` and `after/` with identical initial code. Use small independent CMake projects with `include/`, `src/`, and a short `main.cpp` by default; `url_shortener` is a focused single-file exercise.
+- Design exercises begin with a short `README.md` and the learner's `DESIGN.md`; prepare the implementation scaffold after reviewing the proposal.
 - Aim for 70–130 lines of starter code and 30–60 minutes of work. Adjust the scope to learning progress; line count is only a guide.
 - Each exercise requires implementing several methods or a complete feature, as well as fixing bugs. Exercises that only require changing a keyword are no longer the main format.
 - Introduce one new topic at a time, gradually combining topics already covered.
@@ -40,7 +41,7 @@ Preserve `before/` and solutions to previous exercises. Always create a new fold
 | Completed: `config_parser` | Strings, parsing, errors | Server configuration and validation | Implement parsing and validation with explicit policies for duplicates, empty values, and invalid input. |
 | Completed: `retry_queue` | Containers, ordering, `std::chrono`, value types | Delayed work and retry scheduling | Implement scheduling, selecting ready work, and bounded retries using a caller-controlled clock. No sleeping or worker threads. |
 | Completed: `url_shortener` | RAII, ownership, bounded retries | Unique short codes and collision handling | Replace raw ownership, preserve existing mappings, and retry candidate generation within a fixed budget. |
-| Current: design fundamentals | Coupling and cohesion | Inference request processing | Propose responsibilities, data flow, and ownership before implementing the design. |
+| Current: `inference_service` | Coupling and cohesion | Inference request processing | Propose responsibilities, data flow, and ownership in `DESIGN.md` before implementing the design. |
 
 `url_shortener` is complete. Begin the design sequence with a small inference request processing problem: propose a design before receiving a preferred approach or implementation scaffold.
 
