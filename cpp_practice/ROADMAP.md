@@ -41,9 +41,9 @@ Preserve `before/` and solutions to previous exercises. Always create a new fold
 | Completed: `config_parser` | Strings, parsing, errors | Server configuration and validation | Implement parsing and validation with explicit policies for duplicates, empty values, and invalid input. |
 | Completed: `retry_queue` | Containers, ordering, `std::chrono`, value types | Delayed work and retry scheduling | Implement scheduling, selecting ready work, and bounded retries using a caller-controlled clock. No sleeping or worker threads. |
 | Completed: `url_shortener` | RAII, ownership, bounded retries | Unique short codes and collision handling | Replace raw ownership, preserve existing mappings, and retry candidate generation within a fixed budget. |
-| Current: `inference_service` | Coupling and cohesion | Inference request processing | Propose responsibilities, data flow, and ownership in `DESIGN.md` before implementing the design. |
+| Current: `inference_service` | Coupling and cohesion | Inference request processing | Implement the agreed parser/model boundaries, borrowed dependencies, logging, and response handling; then add another implementation without changing orchestration. |
 
-`url_shortener` is complete. Begin the design sequence with a small inference request processing problem: propose a design before receiving a preferred approach or implementation scaffold.
+`url_shortener` is complete. The initial `inference_service` design has been discussed; implement its first slice, then review how changing an input format affects the other components.
 
 ## Software Design Principles and Patterns
 
