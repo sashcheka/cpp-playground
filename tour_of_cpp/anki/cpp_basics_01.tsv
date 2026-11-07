@@ -1,0 +1,55 @@
+#deck:CPP
+#separator:Tab
+#html:true
+#columns:Front	Back
+What determines whether division is integer or floating-point?	"<div>The operand types after arithmetic conversions, not the destination type. Converting the result afterward cannot restore a discarded fractional part.</div><br><pre><code>double a = 7 / 2;   // 3.0
+double b = 7.0 / 2; // 3.5</code></pre>"
+How do prefixes determine the base of an integer literal in C++?	"<div>No prefix means decimal; a leading 0 means octal; 0b means binary; 0x means hexadecimal. All of the following have the same value.</div><br><pre><code>10
+012
+0b1010
+0xA</code></pre>"
+How does brace initialization protect against narrowing conversions?	"<div>Brace initialization rejects narrowing conversions. Ordinary copy initialization can allow them, potentially losing information.</div><br><pre><code>int a = 3.7; // allowed: a becomes 3
+int b{3.7};  // error: narrowing
+double c{3}; // OK: exactly representable</code></pre>"
+Does auto make a variable dynamically typed?	"<div>No. Its type is deduced at declaration and stays fixed. Later assignments convert to that type when the conversion is permitted.</div><br><pre><code>auto value = 10; // int
+value = 2.8;     // still int; value becomes 2</code></pre>"
+How do const and constexpr differ for variables?	"<div>const allows runtime initialization and prevents modification through that name. A constexpr object is also const, but requires a constant-expression initializer.</div><br><pre><code>const int a = ReadInput(); // runtime input is allowed
+constexpr int b = 2 * 3;   // constant expression required</code></pre>"
+Must a constexpr function always execute at compile time?	"<div>No. It can participate in constant expressions, but it can also execute at runtime. A constexpr variable requires its initializer to satisfy constant-expression rules.</div><br><pre><code>constexpr int Twice(int x) { return x * 2; }
+constexpr int a = Twice(3); // constant evaluation required
+int b = Twice(ReadInput()); // runtime input</code></pre>"
+Is an expression a constant expression just because the optimizer computes it in advance?	"<div>No. Constant expressions must satisfy language rules. Optimization can precompute other expressions without making them valid in contexts requiring a constant expression.</div><br><pre><code>int Twice(int x) { return x * 2; }
+int a = Twice(3);           // optimizer may replace with 6
+constexpr int b = Twice(3); // error: function is not constexpr</code></pre>"
+How do value and reference loop variables affect vector<int> elements?	"<div>A value loop variable is a copy; modifying it leaves the vector unchanged. A reference loop variable refers to the original element. For read-only access to small scalar types, copying is usually appropriate.</div><br><pre><code>for (auto x : values) ++x;        // modifies copies
+for (auto&amp; x : values) ++x;       // modifies elements
+for (auto x : values) Print(x);  // reads copies</code></pre>"
+Does iterating by reference allocate a separate pointer for every vector element?	"<div>No array of pointers is created. The loop binds a reference to the current element on each iteration. References do not necessarily need separate storage; exact register or stack usage depends on generated code.</div><br><pre><code>for (auto it = values.begin(); it != values.end(); ++it) {
+    int&amp; x = *it;
+    ++x;
+} // no per-element pointer collection</code></pre>"
+Does std::move itself transfer resources?	"<div>No. It casts an expression to an rvalue, allowing a move operation to be selected. The selected constructor or assignment performs the transfer. Copying may occur if no suitable move operation is available.</div><br><pre><code>std::string source = &quot;hello&quot;;
+std::string destination = std::move(source); // move construction
+// Do not assume a moved-from string is empty.</code></pre>"
+What is guaranteed about a unique_ptr after its ownership is moved to another unique_ptr?	"<div>The destination owns the object and the source is empty (nullptr). This is a unique_ptr guarantee, not a general rule for every moved-from type.</div><br><pre><code>auto source = std::make_unique&lt;int&gt;(42);
+auto destination = std::move(source);
+// source == nullptr
+// *destination == 42</code></pre>"
+Why is initializer_list problematic for a vector of move-only objects?	"<div>Its elements are exposed as const. The vector must construct its own elements from them. Typical ownership-transferring moves cannot modify a const source, and move-only types cannot be copied.</div><br><pre><code>std::vector&lt;std::unique_ptr&lt;int&gt;&gt; values{
+    std::make_unique&lt;int&gt;(42)
+}; // error
+// std::move inside the braces does not solve this.</code></pre>"
+What is copied when a shared_ptr is copied, and when should shared_ptr be chosen?	"<div>Copying a shared_ptr shares ownership of the same object; it does not copy that object. Choose shared_ptr when multiple owners need to control lifetime together, not just to make initializer_list syntax work.</div><br><pre><code>auto a = std::make_shared&lt;int&gt;(42);
+auto b = a;
+// a and b own the same int
+*b = 7; // *a is now 7</code></pre>"
+What is object slicing, and how do base references or pointers avoid it?	"<div>Copying a derived object into a concrete base object retains only the base portion. A base reference or pointer refers to the original derived object, allowing virtual dispatch to use its actual type.</div><br><pre><code>Derived derived;
+Base copy = derived; // slicing, if Base is concrete
+Base&amp; ref = derived; // refers to the original object
+// If Base is abstract, constructing copy is forbidden.</code></pre>"
+Why does a polymorphic owning base class need a virtual destructor?	"<div>When deleting a derived object through a base pointer, a virtual base destructor ensures the derived destructor runs before the base destructor. With ordinary delete, deleting through a base pointer without a virtual destructor is undefined behavior.</div><br><pre><code>struct Base {
+    virtual ~Base() = default;
+};
+struct Derived : Base {};
+std::unique_ptr&lt;Base&gt; p = std::make_unique&lt;Derived&gt;();
+// Default deletion through Base* is safe.</code></pre>"
