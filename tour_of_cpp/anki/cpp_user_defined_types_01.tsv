@@ -1,0 +1,83 @@
+#deck:CPP
+#separator:Tab
+#html:true
+#columns:Front	Back
+Why define a user-defined type instead of keeping separate low-level values?	"<div>A type groups a domain concept with its representation and meaningful operations. It can make intent clearer and help prevent invalid combinations of data; abstraction does not inherently require extra runtime overhead.</div><br><pre><code>struct Point {
+    double x;
+    double y;
+};
+Point position{2.0, 3.0}; // one concept, not unrelated doubles</code></pre>"
+What is the difference between struct and class for member access?	"<div>They provide the same class mechanisms, including constructors, methods, and access control. Members are public by default in a struct and private by default in a class. Explicit public/private declarations override the defaults.</div><br><pre><code>struct A { int value; }; // public
+class B { int value; };  // private
+// A struct can also have private members and methods.</code></pre>"
+When do you use . versus -> to access a member?	"<div>Use . through an object or reference, and -&gt; through a pointer. For a built-in pointer, p-&gt;member is equivalent to (*p).member and requires a valid object.</div><br><pre><code>struct Point { int x; };
+Point point{3};
+Point&amp; ref = point;
+Point* ptr = &amp;point;
+point.x = 4;
+ref.x = 5;
+ptr-&gt;x = 6; // same as (*ptr).x = 6</code></pre>"
+Why does a function that initializes or modifies an existing object take a non-const reference?	"<div>A non-const reference gives the function access to the caller&#x27;s original object without copying it. A by-value parameter is a separate object; modifying its own fields does not update the original fields.</div><br><pre><code>struct Point { int x; };
+void SetX(Point&amp; point, int x) { point.x = x; }
+Point p{0};
+SetX(p, 7); // p.x becomes 7</code></pre>"
+Why separate a class interface from its representation?	"<div>The public interface defines supported operations; private representation hides storage details. This lets methods preserve consistency and allows internal changes without changing how callers use the type. Private alone does not guarantee correct methods.</div><br><pre><code>class Buffer {
+public:
+    void Append(char value);
+    std::size_t Size() const;
+private:
+    std::vector&lt;char&gt; data_;
+};
+// Callers use Append/Size, not data_.</code></pre>"
+What does a constructor do, and how is it named?	"<div>A constructor initializes an object when it is created. It has the class name and no return type. It can require the information needed to create a usable object, avoiding a separate initialization call.</div><br><pre><code>struct Point {
+    Point(int initialX) : x{initialX} {}
+    int x;
+};
+Point point{7}; // constructor initializes x
+// Point missing; // error: no zero-argument constructor</code></pre>"
+Does declaring a constructor automatically initialize every scalar member to a known value?	"<div>No. The constructor or a default member initializer must initialize scalar members when a known value is needed. For this ordinary local object, the omitted int member has an indeterminate value; reading it is undefined behavior in C++20.</div><br><pre><code>struct Counter {
+    Counter() {}
+    int count; // omitted from initialization
+};
+Counter counter;
+// Reading counter.count here is undefined behavior.
+// int count = 0; would supply a default member initializer.</code></pre>"
+How does a constructor member initializer list differ from assignments in its body?	"<div>Members are initialized before the constructor body begins. The list after : specifies their initialization; statements in the body act on members afterward. Reference members must be bound during initialization, not assigned later.</div><br><pre><code>struct View {
+    int&amp; value;
+    View(int&amp; source) : value{source} {}
+};
+// value = source in the body would not initialize the reference.</code></pre>"
+What are () and {} called when initializing a member in a constructor?	"<div>size(n) uses direct-initialization; size{n} uses direct-list-initialization. Both can appear in the member initializer list after :. That list is not std::initializer_list. For class members, braces can select an initializer_list constructor and change the meaning.</div><br><pre><code>struct Example {
+    std::vector&lt;int&gt; values;
+    Example() : values{3, 7} {} // two elements: 3, 7
+    // Example() : values(3, 7) {} // three elements: 7, 7, 7
+};
+// Parentheses: ()   Braces: {}</code></pre>"
+What are data members, function members, and type members?	"<div>Data members hold state; function members provide operations; type members declare nested types or aliases. A type declaration itself does not add per-object storage. Public nested types can be named using Class::Type.</div><br><pre><code>class Buffer {
+public:
+    using SizeType = std::size_t; // type member
+    SizeType Size() const;       // function member
+private:
+    SizeType size_ = 0;          // data member
+};
+Buffer::SizeType count = 3;</code></pre>"
+Why would an element-access operator return T& instead of T?	"<div>Returning T&amp; gives access to the actual element, enabling both reading and assignment through the result. Returning T gives a copy instead. In either case, the function must implement any required bounds checks itself.</div><br><pre><code>// Inside a class whose elem points to its elements:
+double&amp; operator[](int index) { return elem[index]; }
+// Then v[0] = 3.5 changes the stored element.
+// No bounds check is provided by this implementation.</code></pre>"
+How can a vector-like object keep a fixed size while its element count changes?	"<div>The object is a fixed-size handle containing metadata such as a pointer and a count. Elements occupy separate storage. Changing their number changes the count and possibly the allocation, not sizeof the handle. sizeof does not include separately allocated elements.</div><br><pre><code>struct Handle {
+    double* elem;
+    std::size_t size;
+};
+// sizeof(Handle) includes fields and possible padding,
+// not size * sizeof(double) bytes of external storage.</code></pre>"
+Do a vector-like handle and its elements have to occupy the same storage region?	"<div>No. An ordinary local handle typically lives on the stack, while its dynamically allocated elements live separately on the free store. The handle itself can also be allocated dynamically; its type does not force stack placement.</div><br><pre><code>std::vector&lt;double&gt; local(6); // local handle, dynamic elements
+auto owner = std::make_unique&lt;std::vector&lt;double&gt;&gt;(6);
+// The second vector object is dynamically allocated too.
+// These are typical physical layouts; optimization can change storage.</code></pre>"
+Does leaving a scope automatically release an array created with raw new[]?	"<div>No. Dynamic allocation lifetime is independent of the allocating block. Destroying a raw pointer does not release the array it points to. The owner must arrange cleanup; standard containers normally manage their own element storage.</div><br><pre><code>int* data = nullptr;
+{
+    data = new int[3]{};
+} // array still exists
+data[0] = 7;
+delete[] data; // releases the array; data is now dangling</code></pre>"

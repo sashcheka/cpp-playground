@@ -1,0 +1,99 @@
+#deck:CPP
+#separator:Tab
+#html:true
+#columns:Front	Back
+How do scope and lifetime differ?	"<div>Scope determines where a name can be used. Lifetime determines when an object exists. A local static object can outlive the block in which its name is visible.</div><br><pre><code>void Count() {
+    static int count = 0;
+    ++count;
+} // count keeps its value between calls
+// The name count is not accessible here.</code></pre>"
+What happens when an inner scope declares a name already used in an outer scope?	"<div>The inner declaration hides the outer name within its scope. It creates a distinct variable; it does not replace or modify the outer object. Avoid unnecessary shadowing.</div><br><pre><code>int value = 10;
+{
+    int value = 20; // different object
+    ++value;       // inner value becomes 21
+}
+// Outer value is still 10.</code></pre>"
+What is the difference between a type, an object, a variable, and a literal?	"<div>A type specifies values and operations. An object is storage holding a value of a type. In this simple case, a variable names an object. A literal is source notation for a value; an integer literal is not itself a separate object.</div><br><pre><code>int count = 5;
+// int: type
+// count: variable naming an int object
+// 5: integer literal denoting the value five</code></pre>"
+How does initialization differ from assignment?	"<div>Initialization establishes an object when it is created. Assignment changes an existing object. The symbol = can appear in both; its presence alone does not mean assignment.</div><br><pre><code>int value = 7; // initialization
+value = 9;     // assignment
+int other{7};  // initialization</code></pre>"
+How do uninitialized automatic and static int variables differ?	"<div>An ordinary local int without an initializer has an indeterminate value; reading that value is undefined behavior in C++20. Assigning a value first is valid. A static int without an explicit initializer is zero-initialized.</div><br><pre><code>void Example() {
+    int local;
+    local = 5;       // OK: writing before reading
+    static int shared; // initially 0; survives calls
+}
+// Prefer int local{} when zero is wanted.</code></pre>"
+Does assigning to a reference change which object it refers to?	"<div>No. A reference must be bound during initialization and cannot be reseated. Assignment through it changes the referred-to object.</div><br><pre><code>int a = 1;
+int b = 2;
+int&amp; ref = a;
+ref = b; // a becomes 2; ref still refers to a
+// int&amp; missing; // error: no initializer</code></pre>"
+What is copied when one raw pointer is assigned to another?	"<div>The address value is copied, not the pointed-to object. The pointers are distinct variables that can point to the same object. Reassigning one pointer does not reassign the other.</div><br><pre><code>int a = 1, b = 2;
+int* p = &amp;a;
+int* q = &amp;b;
+p = q;  // both point to b
+*p = 9; // b becomes 9
+p = &amp;a; // q still points to b</code></pre>"
+How does pointer arithmetic relate to array layout?	"<div>Array elements are contiguous. Moving a T pointer by one moves to the next T element, a distance of sizeof(T) bytes. Pointer arithmetic must stay within the same array or its one-past position.</div><br><pre><code>int values[]{10, 20, 30};
+int* p = &amp;values[0];
+++p; // points to values[1]
+// *p == 20
+// p[i] means *(p + i).</code></pre>"
+Which array positions may be accessed, and what is a one-past pointer for?	"<div>For an array of N elements, valid indices are 0 through N-1. A pointer one past the array may be formed and used as an iteration boundary, but not dereferenced. Built-in array indexing does not check bounds.</div><br><pre><code>int values[3]{};
+int* end = values + 3; // valid boundary
+values[2] = 7;         // OK
+// *end = 7;           // undefined behavior
+// values[3] = 7;      // undefined behavior</code></pre>"
+Does checking a pointer against nullptr prove that it is safe to dereference?	"<div>No. It proves only that the pointer is not null. A non-null pointer can still be dangling or one-past an array. Dereferencing requires a live, accessible object of an appropriate type.</div><br><pre><code>int* p = nullptr;
+if (p) {
+    // This branch is skipped.
+}
+// Never dereference nullptr.
+// A dangling pointer is not automatically set to nullptr.</code></pre>"
+How does a C-style string terminator differ from nullptr?	"<div>A C-style string ends with a zero-valued character, &#x27;\0&#x27;. nullptr is a null pointer value, not a character. Character-by-character traversal needs an accessible terminator to know where to stop.</div><br><pre><code>const char* text = &quot;Hi&quot;; // H, i, then &#x27;\0&#x27;
+while (*text != &#x27;\0&#x27;) {
+    ++text;
+}
+// text points to the terminator; it is not nullptr.</code></pre>"
+Does a const reference make the original object immutable?	"<div>It prevents modification through that reference. If the original object is non-const, another non-const name or reference can still modify it. Use const references to provide read-only access without copying.</div><br><pre><code>int value = 1;
+const int&amp; view = value;
+// view = 2; // error
+value = 2;   // OK; view now observes 2</code></pre>"
+How does consteval differ from constexpr for function calls?	"<div>A constexpr function supports both constant and runtime evaluation. An ordinary call to a consteval function must be a constant expression, even if its result is assigned to a non-constexpr variable.</div><br><pre><code>consteval int Twice(int x) { return x * 2; }
+int a = Twice(3); // OK: evaluated at compile time
+int input = ReadInput();
+// int b = Twice(input); // error: runtime argument</code></pre>"
+Where does C++ require constant expressions rather than runtime values?	"<div>Examples include built-in array bounds, case labels, non-type template arguments, and constexpr variable initializers. Const alone does not guarantee that an expression qualifies.</div><br><pre><code>constexpr int size = 4;
+int values[size]; // OK
+const int runtimeSize = ReadInput();
+// int other[runtimeSize]; // not standard C++
+// A local const int initialized with 4 would qualify.</code></pre>"
+Can constant evaluation modify existing global state?	"<div>No. A required constant evaluation cannot modify an existing global object. It can modify local objects created within that evaluation. A constexpr function is not necessarily side-effect-free when called at runtime.</div><br><pre><code>int counter = 0;
+constexpr int Compute(int x) {
+    if (x &gt; 0) ++counter;
+    return x * 2;
+}
+constexpr int a = Compute(0); // OK
+// constexpr int b = Compute(1); // error
+int c = Compute(1); // OK: runtime; increments counter</code></pre>"
+Where is a variable declared in an if initializer available?	"<div>It is available in the condition and both branches of that if statement, but not after the statement. This limits scope and prevents accidental later use.</div><br><pre><code>if (auto n = values.size(); n != 0) {
+    Print(n);
+} else {
+    Print(n); // also in scope
+}
+// Print(n); // error: n is out of scope</code></pre>"
+How do break and return differ inside a switch nested in a loop?	"<div>break exits the nearest enclosing loop or switch; inside a switch it exits that switch, not an outer loop. return exits the entire function. Without an exit, execution can fall through into the next case.</div><br><pre><code>for (char command : commands) {
+    switch (command) {
+    case &#x27;s&#x27;: Save(); break; // continues after switch
+    case &#x27;q&#x27;: return;       // leaves the function
+    default: break;
+    }
+    Refresh();
+}</code></pre>"
+How do machine addresses, registers, and language-level objects relate?	"<div>A pointer typically represents a virtual memory address. CPU registers hold current values and addresses; cache and RAM serve memory accesses. A C++ object does not imply a separate RAM slot: optimization can keep values in registers or eliminate unused objects.</div><br><pre><code>int value = 5;
+int result = value + 1;
+// No fixed number of RAM loads/stores is guaranteed.
+// Choose value/reference semantics for behavior first.</code></pre>"

@@ -1,0 +1,31 @@
+#deck:CPP
+#separator:Tab
+#html:true
+#columns:Front	Back
+Does static imply inline for class members?	"<div>No. A static data member is shared by instances; static alone does not make its definition inline. Since C++17, inline static allows a definition in a shared header. A static constexpr data member is implicitly inline since C++17.</div><br><pre><code>class Counter {
+public:
+    static int created;          // declaration; not inline
+    inline static int total = 0; // inline definition, C++17
+};</code></pre>"
+Which member functions are implicitly inline when defined inside a class?	"<div>In ordinary header-based code, functions defined inside the class are implicitly inline, including static member functions. This allows matching definitions in multiple translation units under the ODR rules; it does not guarantee machine-code inlining. Merely being a member does not give an out-of-class definition this property.</div><br><pre><code>// counter.hpp
+class Counter {
+public:
+    int Value() const { return value_; } // implicitly inline
+    static int Zero() { return 0; }     // implicitly inline
+private:
+    int value_ = 0;
+};</code></pre>"
+How can an ordinary mutable static data member be declared and defined across files?	"<div>Declare it inside the class in the header and define it once in a .cpp file. Since C++17, inline static permits the definition and initializer directly inside the class, with no separate .cpp definition. The member remains one shared object.</div><br><pre><code>// counter.hpp
+class Counter { public: static int created; };
+
+// counter.cpp
+#include &quot;counter.hpp&quot;
+int Counter::created = 0;
+
+// Alternative since C++17, in the header:
+// class Counter { public: inline static int created = 0; };</code></pre>"
+Is a pointer an integer because its value represents an address?	"<div>No. A pointer has its own type, such as int* or Widget*, not int or size_t. An address can be displayed numerically, but this does not change the pointer type. Typed pointers support operations based on the pointed-to type; a pointer type alone does not guarantee a live object at that address.</div><br><pre><code>int value = 7;
+int* p = &amp;value; // p has type int*
+std::cout &lt;&lt; static_cast&lt;const void*&gt;(p); // displays an address
+// A one-past pointer also has type int*,
+// but it must not be dereferenced.</code></pre>"
