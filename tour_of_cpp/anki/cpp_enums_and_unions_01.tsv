@@ -1,0 +1,83 @@
+#deck:CPP
+#separator:Tab
+#html:true
+#columns:Front	Back
+Why use enum class for distinct domains of named constants?	"<div>It creates a distinct type with scoped enumerator names. Values from different enum classes cannot be mixed implicitly, even if their underlying numbers are equal.</div><br><pre><code>enum class Color { Red, Green };
+enum class Light { Red, Green };
+Color c = Color::Red;
+// c = Light::Red; // error: different types
+// c == Light::Red; // error</code></pre>"
+How do plain enum and enum class differ in naming and integer conversions?	"<div>Plain enum introduces enumerator names into the enclosing scope and permits implicit conversion to an integer. enum class requires qualification unless names are introduced with using, and does not implicitly convert to an integer. Enumerators still have their enum type, not int.</div><br><pre><code>enum Color { Red, Green };
+int n = Green; // implicit conversion; n becomes 1
+
+enum class Light { Red, Green };
+// int m = Light::Green; // error
+int m = static_cast&lt;int&gt;(Light::Green); // 1</code></pre>"
+What is an enum underlying type, and is it the type of an enumerator expression?	"<div>The underlying integer type represents the enum values. For enum class it defaults to int; it can be specified explicitly. An enumerator expression has the enum type. A plain enum without a fixed underlying type uses an implementation-selected integer type.</div><br><pre><code>enum class Status : unsigned char { Ready, Done };
+auto state = Status::Ready; // type: Status
+// Underlying type: unsigned char
+// Without : unsigned char, this enum class defaults to int.</code></pre>"
+How are enumerator values assigned when explicit numbers are omitted?	"<div>The first defaults to zero. Each later enumerator defaults to the previous value plus one. An explicit value changes the starting point for subsequent implicit values.</div><br><pre><code>enum class Status {
+    Pending,       // 0
+    Running = 10,  // 10
+    Finished       // 11
+};</code></pre>"
+Can an enum class contain a value that has no named enumerator?	"<div>Yes. A fixed-underlying-type enum can hold values representable by that underlying type, including unnamed ones. Since C++17, direct-list-initialization permits a single non-narrowing integer conversion. Creating such a value does not validate it against application-supported choices.</div><br><pre><code>enum class Color { Red, Green, Blue };
+Color c{5}; // valid Color value, but no named enumerator for 5
+// Color d = 5; // error: implicit conversion is forbidden
+// Validate unsupported values before using them as domain choices.</code></pre>"
+What does using enum do, and does it remove enum class type safety?	"<div>Since C++20, using enum introduces the enumerator names into the current scope so the enum qualifier can be omitted. It does not change their types or allow implicit integer conversion.</div><br><pre><code>enum class Light { Red, Green };
+{
+    using enum Light;
+    Light state = Red; // means Light::Red
+    // int n = Red; // still an error
+}
+// Outside this block, use Light::Red again.</code></pre>"
+Does enum class provide arithmetic increment automatically?	"<div>No. Define an operator when increment has a meaningful domain-specific interpretation. A prefix increment overload typically modifies its argument and returns a reference to it. Handle unsupported enum values explicitly when they are possible.</div><br><pre><code>enum class Light { Red, Green };
+Light&amp; operator++(Light&amp; light) {
+    switch (light) {
+    case Light::Red: light = Light::Green; break;
+    case Light::Green: light = Light::Red; break;
+    default: throw std::invalid_argument(&quot;unknown light&quot;);
+    }
+    return light;
+}</code></pre>"
+How does union storage differ from struct storage?	"<div>A struct has separate storage for its data members. A union overlays its non-static data members in shared storage and has at most one active member at a time. Its size must accommodate the largest member and the required alignment; padding can affect the exact size.</div><br><pre><code>struct Both { int number; double real; };
+union Either { int number; double real; };
+// Both can store number and real simultaneously.
+// Either uses overlapping storage for the alternatives.</code></pre>"
+What does the active member of a union mean?	"<div>It is the member whose object lifetime is currently active in the shared storage. Storing one alternative does not store all alternatives simultaneously. Reading an inactive unrelated alternative is not a valid general conversion technique.</div><br><pre><code>union Value { int number; double real; };
+Value v{42}; // number is active
+v.real = 3.5; // for these scalar members, activates real
+// Do not read v.number as though it still held 42.
+// Use a numeric cast if a numeric conversion is intended.</code></pre>"
+Why is maintaining a union tag error-prone?	"<div>A raw union does not track its active alternative. A separate tag must stay consistent with every change to the stored value. A stale tag can direct code to read the wrong member.</div><br><pre><code>enum class Kind { Number, Real };
+struct Entry {
+    Kind kind;
+    union { int number; double real; };
+};
+Entry e{Kind::Number, {42}};
+e.real = 3.5; // active member changes, but kind still says Number</code></pre>"
+How does encapsulating a tagged union improve safety?	"<div>Hide both the union and its tag, then expose operations that maintain their correspondence and check accesses. Encapsulation prevents callers from changing the tag and stored alternative independently; the implementation must still manage lifetimes correctly.</div><br><pre><code>// Public operations might be:
+void SetNumber(int value); // activates number and updates tag
+void SetReal(double value); // activates real and updates tag
+int Number() const; // checks the active alternative
+// Keep raw storage and the tag private.</code></pre>"
+What does std::variant manage that a naked union does not?	"<div>It manages alternative lifetimes and tracks which alternative is active. Assigning a new alternative updates that state automatically, so no separate user-maintained tag is needed. It is often the safer application-level choice.</div><br><pre><code>std::variant&lt;int, std::string&gt; value{42};
+value = std::string{&quot;hello&quot;};
+// The active alternative changes from int to std::string.
+// No manual tag update is required.</code></pre>"
+How can you safely access a known alternative in std::variant?	"<div>Check the active alternative with holds_alternative&lt;T&gt;, then access it with get&lt;T&gt;. For these APIs, T must occur exactly once among the alternatives. get&lt;T&gt; throws std::bad_variant_access if T is not active; it does not reinterpret the stored bytes.</div><br><pre><code>std::variant&lt;int, double&gt; value{42};
+if (std::holds_alternative&lt;int&gt;(value)) {
+    std::cout &lt;&lt; std::get&lt;int&gt;(value); // 42
+}
+// std::get&lt;double&gt;(value); // throws: int is active</code></pre>"
+How does an anonymous union differ from an unnamed struct with a named object?	"<div>An anonymous union has no type name or member-object name; its member names are accessible in the surrounding scope. An unnamed struct can define a named object, whose members are accessed through that object. Named unions can have methods and private members; anonymous unions cannot have member functions, and their data members must be public.</div><br><pre><code>struct Entry {
+    union { int number; double real; };
+};
+Entry e;
+e.number = 42; // no intermediate union object name
+
+struct { int x; int y; } point{1, 2};
+// unnamed struct type, named object point
+point.x = 3;</code></pre>"
