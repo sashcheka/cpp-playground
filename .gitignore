@@ -13,6 +13,7 @@ compile_commands.json
 CMakeUserPresets.json
 
 # Compiled files
+/tour_of_cpp/practice/request_counter/request_counter
 *.out
 *.o
 *.obj
