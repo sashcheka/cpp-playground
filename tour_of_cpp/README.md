@@ -16,12 +16,13 @@ Use short English comments for useful conclusions and open questions.
 Keep deliberate compilation failures commented out and label them clearly.
 Do not copy whole chapters or collect examples you cannot explain.
 
-Book experiments live here; larger review exercises stay in `cpp_practice/`.
+Book experiments live in `practice/<topic>/main.cpp`; larger review exercises
+stay in `cpp_practice/`.
 There is no need for `before/` and `after/` for these experiments.
 
 ## Build and run
 
-From a topic directory such as `01_basics/`:
+From a topic directory such as `practice/counter/`:
 
 ```sh
 clang++ -std=c++20 -Wall -Wextra -Wpedantic -g main.cpp -o /tmp/tour_of_cpp.out && /tmp/tour_of_cpp.out
