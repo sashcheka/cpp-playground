@@ -1,0 +1,69 @@
+#deck:CPP
+#separator:Tab
+#html:true
+#columns:Front	Back
+What is the difference between a function declaration and a function definition?	"<div>A declaration introduces a function and its type so it can be called. A definition supplies its body. A declaration can be repeated; an ordinary non-inline function must not have multiple definitions in the program.</div><br><pre><code>int Add(int, int); // declaration
+int Add(int a, int b) { return a + b; } // definition</code></pre>"
+Why separate an interface from an implementation?	"<div>The interface tells users what they can use; the implementation provides the behavior. This lets users work against a stable contract while internal code changes.</div><br><pre><code>// Interface
+int ParsePort(const std::string&amp; text);
+// Its body can be defined elsewhere.</code></pre>"
+What is a translation unit in a typical header-based C++ project?	"<div>A source file together with the headers textually included in it forms a translation unit after preprocessing. Each translation unit is compiled separately.</div><br><pre><code>// main.cpp
+#include ""settings.hpp""
+// main.cpp and the included contents are processed together.</code></pre>"
+How do separate compilation and linking work together?	"<div>Source files can be compiled into object files separately, often in parallel. The linker combines the object files and resolves references to definitions needed by the program.</div><br><pre><code>main.cpp  -&gt; main.o
+cache.cpp -&gt; cache.o
+main.o + cache.o -&gt; executable</code></pre>"
+Why should the source file implementing a header include that header?	"<div>The compiler can check its definitions against the same declarations used by consumers. This helps catch mismatched signatures and prevents interfaces from drifting.</div><br><pre><code>// cache.cpp
+#include ""cache.hpp""
+int Cache::Size() const { return size_; }</code></pre>"
+What happens when #include is processed, and why can it slow builds?	"<div>The preprocessor replaces the include directive with the header contents. Each translation unit that includes a header processes those contents, including nested includes.</div><br><pre><code>// Both source files include cache.hpp.
+// Each translation unit processes its contents.</code></pre>"
+Why should a header include the declarations it needs?	"<div>A self-contained header can be included without relying on earlier includes. Each source file should also include the headers for names it uses directly, rather than relying on indirect includes.</div><br><pre><code>// user.hpp
+#include &lt;string&gt;
+class User { std::string name_; };</code></pre>"
+What problem do include guards prevent?	"<div>They prevent the contents of a header from being processed more than once in the same translation unit. They do not prevent processing the header in other translation units.</div><br><pre><code>#ifndef USER_HPP
+#define USER_HPP
+class User {};
+#endif</code></pre>"
+Why can a non-inline function definition in a header cause a linking error?	"<div>If multiple translation units include that header, they may each define the same function, violating the one-definition rule. Put an ordinary function definition in one source file, or use inline when appropriate.</div><br><pre><code>// In a header included by two .cpp files:
+int Twice(int x) { return 2 * x; } // multiple definitions</code></pre>"
+How can include order change a header's meaning?	"<div>An earlier header can introduce declarations or macros that affect a later one. A header should provide its own required declarations and avoid relying on a particular include order.</div><br><pre><code>// A previous header might define a macro
+// that changes text in a later header.</code></pre>"
+Why can inconsistent declarations or definitions in separate source files be hard to detect?	"<div>Each translation unit is compiled separately. Conflicting definitions across translation units can violate the one-definition rule without a required diagnostic, producing subtle errors.</div><br><pre><code>// a.cpp: struct User { int id; };
+// b.cpp: struct User { long id; };
+// These definitions disagree.</code></pre>"
+What is a transitive include dependency?	"<div>When A includes B and B includes C, including A also processes C. Code may accidentally rely on a header included indirectly, and changes can trigger wider rebuilds.</div><br><pre><code>// app.cpp includes A.hpp
+// A.hpp includes B.hpp
+// app.cpp also processes B.hpp.</code></pre>"
+What changes when only an ordinary function's implementation changes in a separate source file?	"<div>With a typical incremental build, rebuild its implementation file and relink affected binaries. Source files that use the unchanged interface normally do not need recompilation.</div><br><pre><code>// cache.hpp: int Size() const; // unchanged
+// cache.cpp: function body changes</code></pre>"
+How do named C++ modules expose an interface?	"<div>The module author marks declarations with export. Other translation units import the module by its module name and can use its exported names. Named modules are a C++20 feature.</div><br><pre><code>// math.cppm
+export module math;
+export int Twice(int x) { return 2 * x; }
+
+// main.cpp
+import math;
+int n = Twice(3);</code></pre>"
+What does a compiler-generated module interface contain, and how does an importer refer to it?	"<div>The programmer chooses the exported declarations. The compiler produces an implementation-specific compiled module interface for importers. Source code imports the module by name rather than naming that generated artifact.</div><br><pre><code>export module math; // module name
+// In a consumer:
+import math;</code></pre>"
+How do imports inside a named module affect its consumers?	"<div>An ordinary import makes another module available to the importing module; it does not automatically make that module's exported names visible to consumers. Use export import when re-export is intended.</div><br><pre><code>export module A;
+import B;        // B is available within A
+// export import B; would re-export B</code></pre>"
+How do C++20 header unit imports differ from the standard library module std?	"<div>C++20 permits importing an available header as a header unit; the named standard library module std was standardized in C++23. Both require suitable compiler, library, and build support.</div><br><pre><code>import &lt;cmath&gt;; // header unit, C++20
+import std;     // named standard library module, C++23</code></pre>"
+Why use namespaces for names in different libraries or components?	"<div>Namespaces group related declarations and let separate components use the same unqualified names without necessarily colliding. Qualify a name with its namespace to select it.</div><br><pre><code>namespace Network { void Connect(); }
+namespace Database { void Connect(); }
+Network::Connect();</code></pre>"
+How does a using-declaration differ from a using-directive?	"<div>A using-declaration makes a selected name available for lookup; a using-directive makes names from a namespace available to unqualified lookup. Keep their scope narrow to reduce collisions.</div><br><pre><code>using std::cout;       // one name
+using namespace std;   // names from std available to lookup</code></pre>"
+Why avoid a using-directive in a public header?	"<div>An include makes the directive affect code that follows it in every including translation unit. It can introduce name conflicts or change lookup in code that did not request it. Prefer qualified names or a narrow local scope.</div><br><pre><code>// Avoid in a header:
+using namespace std;
+// Prefer std::string, std::vector, etc.</code></pre>"
+Why can an ordinary function body be placed outside a module interface unit?	"<div>A module implementation unit can define exported declarations while keeping the interface file focused on the API. Changing only that implementation normally leaves the compiled interface and its importers untouched; build behavior depends on the toolchain.</div><br><pre><code>// engine.cppm
+export module engine;
+export int Answer();
+
+// engine.cpp
+module engine;
+int Answer() { return 42; }</code></pre>"
