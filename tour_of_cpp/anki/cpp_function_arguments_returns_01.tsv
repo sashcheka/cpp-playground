@@ -1,0 +1,88 @@
+#deck:CPP
+#separator:Tab
+#html:true
+#columns:Front	Back
+How do value, mutable reference, and const-reference function parameters differ?	"<div>A value parameter is a separate object; a mutable reference can modify the caller’s object; a const-reference provides read-only access through that reference. Choose based on the intended operation and cost.</div><br><pre><code>void Copy(int x) { ++x; }
+void Change(int&amp; x) { ++x; }
+void Read(const int&amp; x) { /* use x */ }</code></pre>"
+When should a function parameter be passed by value or by const-reference?	"<div>Cheap-to-copy values are often passed by value. For expensive objects that the function only reads, const-reference avoids a copy. Size alone is not enough: copying, the ABI, and the workload matter. Measure when performance matters.</div><br><pre><code>void SetCount(int count);
+void Print(const std::string&amp; text);</code></pre>"
+What does a default function argument do?	"<div>It supplies a value at a call site when that argument is omitted. It does not create a separate overload. Ordinary defaulted parameters are placed after parameters without defaults.</div><br><pre><code>void Print(int value, int base = 10);
+Print(42);      // base is 10
+Print(42, 16);  // base is 16</code></pre>"
+Does C++20 have named arguments for ordinary function calls?	"<div>No. A call such as f(a = 1, b = 2) assigns existing variables a and b; it does not name function arguments. C++20 designated initializers can name fields of an aggregate, in declaration order.</div><br><pre><code>struct Options { int a; int b; };
+void Solve(Options);
+Solve({.a = 1, .b = 2});</code></pre>"
+When is returning a reference appropriate?	"<div>Return a reference when the caller needs access to an existing object whose lifetime extends beyond the call. The reference becomes invalid if that object is destroyed or an operation invalidates it.</div><br><pre><code>// A member may return a reference to an element
+// that remains alive in its owning container.</code></pre>"
+Why is returning a reference or pointer to an ordinary local variable unsafe?	"<div>An automatic local object is destroyed when the function returns. The returned reference or pointer then dangles; accessing the former object through it is undefined behavior.</div><br><pre><code>int&amp; Bad() {
+    int local = 42;
+    return local; // dangling after return
+}</code></pre>"
+Why return a large owning object by value instead of using raw new in a function?	"<div>Returning an owning RAII object by value gives the caller a normal object with automatic cleanup. Copy elision or move construction can avoid copying its underlying data; no manual delete is needed.</div><br><pre><code>std::vector&lt;int&gt; MakeValues();
+auto values = MakeValues(); // owns its elements</code></pre>"
+Is an overloaded operator inherently more efficient than a named function?	"<div>No. An operator is a function and can use the same parameter and return types as a named function. Use operator syntax when it expresses a familiar operation; choose a name when that is clearer.</div><br><pre><code>Matrix sum = a + b;
+Matrix other = Add(a, b);
+// Both may return Matrix by value.</code></pre>"
+What is NRVO for a named local return value?	"<div>The compiler may construct an eligible named local directly as the function’s result object, so no copy or move occurs. NRVO is optional; its use depends on the compiler and build.</div><br><pre><code>Matrix Make() {
+    Matrix result;
+    return result; // eligible for NRVO
+}</code></pre>"
+What can happen if NRVO is not applied to a returned local object?	"<div>For a move-eligible local, overload resolution can select a move constructor. A copy may be selected when appropriate; if no suitable accessible constructor is available, the program is ill-formed.</div><br><pre><code>Matrix Make() {
+    Matrix result;
+    return result; // NRVO or, for a movable Matrix, move
+}</code></pre>"
+Can a function return a named local when both copy and move constructors are deleted?	"<div>No. NRVO for a named local is optional, so the return must still have an accessible, non-deleted constructor available even if a compiler would elide the call.</div><br><pre><code>struct X {
+    X() = default;
+    X(const X&amp;) = delete;
+    X(X&amp;&amp;) = delete;
+};
+X Make() { X x; return x; } // error</code></pre>"
+When can C++17 return a non-copyable, non-movable object by value?	"<div>When a prvalue of the same class type directly initializes the result, no separate copy or move is required. This is guaranteed in C++17 and later; the destructor must still be accessible and non-deleted.</div><br><pre><code>struct X {
+    X() = default;
+    X(const X&amp;) = delete;
+    X(X&amp;&amp;) = delete;
+};
+X Make() { return X{}; }
+X x = Make(); // OK since C++17</code></pre>"
+How does an absent move constructor differ from an explicitly deleted one when returning a local?	"<div>With a usable copy constructor and no move constructor declared, a copy can be selected if NRVO is not performed. An explicitly deleted move constructor can instead be selected as the best match, making the return ill-formed.</div><br><pre><code>struct X {
+    X() = default;
+    X(const X&amp;) = default;
+    // No move declaration: copy is possible.
+    // X(X&amp;&amp;) = delete; // would change overload resolution
+};</code></pre>"
+Why avoid return std::move(local) for an NRVO-eligible local?	"<div>A plain return of the local permits NRVO and can implicitly move if NRVO is not performed. Writing std::move(local) makes that return ineligible for NRVO; other as-if optimizations may still be possible.</div><br><pre><code>Matrix Make() {
+    Matrix result;
+    return result; // prefer this for an eligible local
+}</code></pre>"
+Can optional copy elision be disabled for an experiment?	<div>Clang and GCC provide -fno-elide-constructors to disable optional elision such as NRVO. It does not disable C++17 cases where the language requires direct construction of a prvalue result.</div><br><pre><code>clang++ -std=c++20 -fno-elide-constructors main.cpp -o example</code></pre>
+How do deduced and trailing function return types differ?	"<div>A function with auto and no trailing type deduces its return type from its return statements. With auto followed by -&gt; T, T is the explicitly specified return type, just as when written before the function name.</div><br><pre><code>auto Double(int x) { return x * 2; }
+auto Scale(int x) -&gt; double { return x * 2; }</code></pre>"
+What happens if an auto-return function has return statements with different types?	"<div>Its return statements must deduce the same type. The compiler does not choose a common type merely because conversions exist. An explicit return type can request conversion.</div><br><pre><code>auto Value(bool flag) {
+    if (flag) return 1;
+    return 2.0; // error: int versus double
+}</code></pre>"
+Does decltype(expression) execute the expression to determine its type?	"<div>No. Its operand is unevaluated: the compiler determines the type without executing the expression. A trailing return type can use function parameter names in decltype.</div><br><pre><code>auto Mul(int a, double b) -&gt; decltype(a * b) {
+    return a * b; // multiplication occurs here
+}</code></pre>"
+How can a function return several related results without output parameters?	"<div>Return one named object containing the results, such as a struct. The caller may use member names or structured binding; a named object can be clearer when the fields have distinct meanings.</div><br><pre><code>struct Range { int low; int high; };
+Range Bounds();
+auto [low, high] = Bounds();</code></pre>"
+Does structured binding always make a copy of the original object?	"<div>No. For an lvalue, auto [a, b] initializes a hidden object from it, usually by copying; auto&amp; [a, b] binds to the original. When the initializer is a prvalue, the hidden object can be initialized directly.</div><br><pre><code>struct Point { int x; int y; };
+Point p{1, 2};
+auto [x, y] = p;    // bindings refer to the copy
+auto&amp; [rx, ry] = p; // bindings refer to p
+rx = 9;             // changes p.x</code></pre>"
+Why is auto used in a structured binding declaration?	"<div>C++ specifies auto-based syntax for structured bindings. The compiler deduces the hidden object type and the types of the bindings. Qualifiers such as auto&amp;, const auto&amp;, and auto&amp;&amp; control how the hidden object is bound.</div><br><pre><code>auto [name, value] = entry;
+const auto&amp; [n, v] = entry;</code></pre>"
+Can structured binding decompose any subset of a class’s data members?	"<div>Not by the ordinary data-member mechanism: all non-static data members must be accessible in the binding context and the number of names must match. A type can instead provide a tuple-like interface to customize decomposition.</div><br><pre><code>class Entry {
+public: int value; int count;
+private: int id;
+};
+// Outside Entry, auto [a, b] = entry; is invalid.</code></pre>"
+Do accessor methods alone make a class usable in structured bindings?	"<div>No. Structured binding needs a supported decomposition mechanism: an array, accessible data members, or the tuple-like protocol. C++20 does not require std::complex to support that protocol; library support for complex was added for C++26.</div><br><pre><code>std::complex&lt;double&gt; z{1, 2};
+auto w = z + 2.0;
+double re = w.real(); // portable C++20 access
+double im = w.imag();</code></pre>"
+When might a named result object be clearer than structured binding?	"<div>Keep the object and use its member names when the values have distinct meanings or when passing the result onward. Use structured binding when local names make the code easier to follow.</div><br><pre><code>auto bounds = Bounds();
+if (bounds.low &lt; bounds.high) { /* ... */ }</code></pre>"
